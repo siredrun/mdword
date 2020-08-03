@@ -1,3 +1,6 @@
 hivejar包
 spark-hivejar包
 gmall-mock-db.jar业务数据生成包。
+azkaban-web-server-2.5.0.tar.gz
+azkaban-executor-server-2.5.0.tar.gz
+azkaban-sql-script-2.5.0.tar.gz
