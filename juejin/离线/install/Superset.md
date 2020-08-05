@@ -98,4 +98,190 @@ conda deactivate # 退出superset环境，个人建议开两个窗口，一个�
 访问http://hadoop102:8787，并使用创建的管理员账号秘密admin/123456登录
 ```
 
-# 使用
+# 使用之数据源配置
+
+```
+# 安装依赖，对接不同的数据源，需安装不同的依赖，以下地址为官网说明。http://superset.apache.org/installation.html#database-dependencies
+conda install mysqlclient
+# 重启Superset
+ps -ef | awk '/gunicorn/ && !/awk/{print $2}' | xargs kill -9
+gunicorn --workers 5 --timeout 120 --bind hadoop102:8787  "superset.app:create_app()" --daemon
+```
+
+访问http://hadoop102:8787数据源配置
+
+0.在mysql的gmall_report数据库执行下面sql
+
+```sql
+DROP TABLE IF EXISTS `ads_area_topic`;
+CREATE TABLE `ads_area_topic`  (
+  `dt` date NOT NULL,
+  `id` int(11) DEFAULT NULL,
+  `province_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `area_code` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `iso_code` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `region_id` int(11) DEFAULT NULL,
+  `region_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `order_day_count` bigint(255) DEFAULT NULL,
+  `order_day_amount` double(255, 2) DEFAULT NULL,
+  `payment_day_count` bigint(255) DEFAULT NULL,
+  `payment_day_amount` double(255, 2) DEFAULT NULL,
+  PRIMARY KEY (`dt`, `iso_code`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '地区主题表' ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of ads_area_topic
+-- ----------------------------
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 1, '北京', '110000', 'CN-11', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 2, '天津市', '120000', 'CN-12', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 5, '河北', '130000', 'CN-13', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 3, '山西', '140000', 'CN-14', 1, '华北', 1, 15927.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 4, '内蒙古', '150000', 'CN-15', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 17, '辽宁', '210000', 'CN-21', 3, '东北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 16, '吉林', '220000', 'CN-22', 3, '东北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 15, '黑龙江', '230000', 'CN-23', 3, '东北', 1, 1569.00, 1, 1569.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 6, '上海', '310000', 'CN-31', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 7, '江苏', '320000', 'CN-32', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 8, '浙江', '330000', 'CN-33', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 9, '安徽', '340000', 'CN-34', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 10, '福建', '350000', 'CN-35', 2, '华东', 1, 297.00, 1, 297.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 11, '江西', '360000', 'CN-36', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 12, '山东', '370000', 'CN-37', 2, '华东', 1, 500.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 23, '河南', '410000', 'CN-41', 4, '华中', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 24, '湖北', '420000', 'CN-42', 4, '华中', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 25, '湖南', '430000', 'CN-43', 4, '华中', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 26, '广东', '440000', 'CN-44', 5, '华南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 27, '广西', '450000', 'CN-45', 5, '华南', 1, 14594.00, 1, 14594.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 28, '海南', '460000', 'CN-46', 5, '华南', 1, 7371.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 13, '重庆', '500000', 'CN-50', 6, '西南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 31, '四川', '510000', 'CN-51', 6, '西南', 1, 233.00, 1, 230.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 32, '贵州', '520000', 'CN-52', 6, '西南', 1, 3124.00, 1, 3124.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 33, '云南', '530000', 'CN-53', 6, '西南', 1, 1558.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 34, '西藏', '540000', 'CN-54', 6, '西南', 1, 459.00, 1, 459.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 18, '陕西', '610000', 'CN-61', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 19, '甘肃', '620000', 'CN-62', 7, '西北', 2, 26509.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 20, '青海', '630000', 'CN-63', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 21, '宁夏', '640000', 'CN-64', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 22, '新疆', '650000', 'CN-65', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 14, '台湾', '710000', 'CN-71', 2, '华东', 0, 0.00, 1, 17352.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 29, '香港', '810000', 'CN-91', 5, '华南', 0, 0.00, 1, 3116.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-10', 30, '澳门', '820000', 'CN-92', 5, '华南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 1, '北京', '110000', 'CN-11', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 2, '天津市', '120000', 'CN-12', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 5, '河北', '130000', 'CN-13', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 3, '山西', '140000', 'CN-14', 1, '华北', 1, 15927.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 4, '内蒙古', '150000', 'CN-15', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 17, '辽宁', '210000', 'CN-21', 3, '东北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 16, '吉林', '220000', 'CN-22', 3, '东北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 15, '黑龙江', '230000', 'CN-23', 3, '东北', 1, 1569.00, 1, 1569.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 6, '上海', '310000', 'CN-31', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 7, '江苏', '320000', 'CN-32', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 8, '浙江', '330000', 'CN-33', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 9, '安徽', '340000', 'CN-34', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 10, '福建', '350000', 'CN-35', 2, '华东', 1, 297.00, 1, 297.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 11, '江西', '360000', 'CN-36', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 12, '山东', '370000', 'CN-37', 2, '华东', 1, 500.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 23, '河南', '410000', 'CN-41', 4, '华中', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 24, '湖北', '420000', 'CN-42', 4, '华中', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 25, '湖南', '430000', 'CN-43', 4, '华中', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 26, '广东', '440000', 'CN-44', 5, '华南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 27, '广西', '450000', 'CN-45', 5, '华南', 1, 14594.00, 1, 14594.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 28, '海南', '460000', 'CN-46', 5, '华南', 1, 7371.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 13, '重庆', '500000', 'CN-50', 6, '西南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 31, '四川', '510000', 'CN-51', 6, '西南', 1, 233.00, 1, 230.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 32, '贵州', '520000', 'CN-52', 6, '西南', 1, 3124.00, 1, 3124.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 33, '云南', '530000', 'CN-53', 6, '西南', 1, 1558.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 34, '西藏', '540000', 'CN-54', 6, '西南', 1, 459.00, 1, 459.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 18, '陕西', '610000', 'CN-61', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 19, '甘肃', '620000', 'CN-62', 7, '西北', 2, 26509.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 20, '青海', '630000', 'CN-63', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 21, '宁夏', '640000', 'CN-64', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 22, '新疆', '650000', 'CN-65', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 14, '台湾', '710000', 'CN-71', 2, '华东', 0, 0.00, 1, 17352.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 29, '香港', '810000', 'CN-91', 5, '华南', 0, 0.00, 1, 3116.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-03-11', 30, '澳门', '820000', 'CN-92', 5, '华南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 1, '北京', '110000', 'CN-11', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 2, '天津市', '120000', 'CN-12', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 5, '河北', '130000', 'CN-13', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 3, '山西', '140000', 'CN-14', 1, '华北', 2, 16376.00, 2, 16376.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 4, '内蒙古', '150000', 'CN-15', 1, '华北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 17, '辽宁', '210000', 'CN-21', 3, '东北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 16, '吉林', '220000', 'CN-22', 3, '东北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 15, '黑龙江', '230000', 'CN-23', 3, '东北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 6, '上海', '310000', 'CN-31', 2, '华东', 1, 6634.00, 1, 6634.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 7, '江苏', '320000', 'CN-32', 2, '华东', 1, 17816.00, 1, 17816.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 8, '浙江', '330000', 'CN-33', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 9, '安徽', '340000', 'CN-34', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 10, '福建', '350000', 'CN-35', 2, '华东', 1, 14297.00, 1, 14297.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 11, '江西', '360000', 'CN-36', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 12, '山东', '370000', 'CN-37', 2, '华东', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 23, '河南', '410000', 'CN-41', 4, '华中', 1, 6914.00, 1, 6914.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 24, '湖北', '420000', 'CN-42', 4, '华中', 1, 3107.00, 1, 3107.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 25, '湖南', '430000', 'CN-43', 4, '华中', 1, 10306.00, 1, 10306.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 26, '广东', '440000', 'CN-44', 5, '华南', 1, 2460.00, 1, 2460.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 27, '广西', '450000', 'CN-45', 5, '华南', 1, 675.00, 1, 675.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 28, '海南', '460000', 'CN-46', 5, '华南', 3, 15174.00, 2, 10495.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 13, '重庆', '500000', 'CN-50', 6, '西南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 31, '四川', '510000', 'CN-51', 6, '西南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 32, '贵州', '520000', 'CN-52', 6, '西南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 33, '云南', '530000', 'CN-53', 6, '西南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 34, '西藏', '540000', 'CN-54', 6, '西南', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 18, '陕西', '610000', 'CN-61', 7, '西北', 2, 6228.00, 2, 6228.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 19, '甘肃', '620000', 'CN-62', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 20, '青海', '630000', 'CN-63', 7, '西北', 2, 10204.00, 2, 10204.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 21, '宁夏', '640000', 'CN-64', 7, '西北', 1, 295.00, 1, 295.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 22, '新疆', '650000', 'CN-65', 7, '西北', 0, 0.00, 0, 0.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 14, '台湾', '710000', 'CN-71', 2, '华东', 1, 1569.00, 1, 1569.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 29, '香港', '810000', 'CN-91', 5, '华南', 2, 9189.00, 1, 4267.00);
+INSERT INTO `ads_area_topic` VALUES ('2020-08-05', 30, '澳门', '820000', 'CN-92', 5, '华南', 1, 7546.00, 1, 7546.00);
+
+SET FOREIGN_KEY_CHECKS = 1;
+```
+
+1.点击Sources/Databases，再点击+
+
+![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/6267a2b0f6824bc1a64e1b13b959eee8~tplv-k3u1fbpfcp-zoom-1.image)
+
+2.点击填写Database及SQL Alchemy URI。注：SQL Alchemy URI编写规范：mysql://账号:密码@IP/数据库名称，如mysql://root:1234@hadoop102/gmall_report?charset=utf8；点击Test Connection，出现“Seems Ok！”提示即表示连接成功；最后点击保存。
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/29d3889b8ab5420da8f840439d73c42c~tplv-k3u1fbpfcp-zoom-1.image)
+
+3.点击Sources/Tables，再点击+号，选择数据库和填写表名。
+
+![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eb979b119090447aab22e409eb73cae7~tplv-k3u1fbpfcp-zoom-1.image)
+
+# 使用之仪表盘制作
+
+1.点击Dashboards，选择+号；title值随意填写然后点击保存。
+
+![](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/43a954c3c8224d83a46270954f12f489~tplv-k3u1fbpfcp-zoom-1.image)
+
+2.点击Charts，选择+号；选择一张表作为数据源，然后点击Table选择可视化/图表类型，选择Country Map，然后点击Create new chart。
+
+![](https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/d7831ecfc5d04d19a429c9b1f352bbcc~tplv-k3u1fbpfcp-zoom-1.image)
+
+3.语言切换为中文，方便处理
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e4441bff724f4050a9734c8766018347~tplv-k3u1fbpfcp-zoom-1.image)
+
+
+
+4.解决Control labeled **"地区/省/部门ISO3166-2代码"** 不能为空，把地区/省/部门ISO3166-2代码的值改为iso_code，设置下面选项，点击run query出来下面结果。
+
+![](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/adb9f50fdc3c49b6bc7e6a03c7b346e9~tplv-k3u1fbpfcp-zoom-1.image)
+
+5.保存看板，看板名字为“全国各省份订单个数”
+
+![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/684956b2e37f4a27983f54192ada93cc~tplv-k3u1fbpfcp-zoom-1.image)
+
+6.保存并转到看板会访问http://hadoop102:8787/superset/dashboard/1/
+
+![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/367cc53660ff4c13900a4e9acbfa10ce~tplv-k3u1fbpfcp-zoom-1.image)
+
+2）选则数据源及图表类型
+
+3）选择何使的图表类型
+
+
+
+# 1
