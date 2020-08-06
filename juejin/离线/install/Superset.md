@@ -248,7 +248,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 3.点击Sources/Tables，再点击+号，选择数据库和填写表名。
 
-![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/eb979b119090447aab22e409eb73cae7~tplv-k3u1fbpfcp-zoom-1.image)
+![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/e09c7c5d4dea44fd8c9d90e57e92f2a4~tplv-k3u1fbpfcp-zoom-1.image)
 
 # 使用之仪表盘制作
 
@@ -278,10 +278,24 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 ![](https://p6-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/367cc53660ff4c13900a4e9acbfa10ce~tplv-k3u1fbpfcp-zoom-1.image)
 
-2）选则数据源及图表类型
+# 使用之自动刷新
 
-3）选择何使的图表类型
+访问仪表盘http://hadoop102:8787/superset/dashboard/1/，查看所有保存的chart图表/看板，设置自动刷新10秒一次。
 
+![](https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0c65f8b2a780442faf071ed18710a4dc~tplv-k3u1fbpfcp-zoom-1.image)
 
+选择mysql的gmall_report数据库执行下面语句，对order_day_count每日支付总数做稍微修改。
+
+```sql
+UPDATE ads_area_topic SET order_day_count = 45 where dt = '2020-03-10'
+and area_code = 120000
+and region_id = 1
+and region_name = '华北'
+and province_name = '天津市';
+```
+
+等待10秒再看仪表盘http://hadoop102:8787/superset/dashboard/1/
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a262e8691cbd42099934bf16340b0242~tplv-k3u1fbpfcp-zoom-1.image)
 
 # 1
