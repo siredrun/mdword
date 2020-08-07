@@ -156,35 +156,84 @@ presto:default> show tables;
 可视化安装
 
 ```
-# 可视化安装
-# 必须安装好git java nodejs
-wget https://nodejs.org/dist/v12.18.3/node-v12.18.3-linux-x64.tar.xz
-//解压
-xz -d node-v12.18.3-linux-x64.tar.xz
-tar -xvf node-v12.18.3-linux-x64.tar
-mv node-v12.18.3-linux-x64 node
-mv node /opt/module/
-vim /etc/profile
-#NODE_HOME
-export NODE_HOME=/opt/module/node
-export PATH=$PATH:$NODE_HOME/bin
+# 将yanagishima-18.0.zip下载上传到/opt/module目录
+unzip /opt/module/yanagishima-18.0.zip
+mv /opt/module/yanagishima-18.0 /opt/module/yanagishima
+mv /opt/module/conf/yanagishima.properties /opt/module/conf/yanagishima.properties.bak
+vim /opt/module/conf/yanagishima.properties
+jetty.port=7080
+presto.datasources=admin-presto
+presto.coordinator.server.admin-presto=http://hadoop102:8881
+catalog.admin-presto=hive
+schema.admin-presto=default
+sql.query.engines=presto
 
-source /etc/profile
-git clone https://github.com/yanagishima/yanagishima.git
-cd yanagishima
-git checkout -b 18.0 refs/tags/18.0
-./gradlew distZip
-cd build/distributions
-unzip yanagishima-[version].zip
-cd yanagishima-[version]
-vim conf/yanagishima.properties
-nohup bin/yanagishima-start.sh >y.log 2>&1 &
-
-vim /etc/profile
-#PRESTOWEB_HOME
-export PRESTOWEB_HOME=/opt/module/node
-export PATH=$PATH:$PRESTOWEB_HOME/bin
-
-source /etc/profile
+xcall $PRESTO_HOME/bin/launcher start #保证Presto启动
+/opt/module/yanagishima/bin/yanagishima-start.sh
+# 启动web页面http://hadoop102:7080 
 ```
 
+就是一个简单业务，hive和mysql因为在presto catalog里面配置了hive和mysql
+
+![](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/3d9968d838a14803a609945de0803a9c~tplv-k3u1fbpfcp-zoom-1.image)
+
+## 优化
+
+**数据存储**
+
+1.合理设置分区：与Hive类似，Presto会根据元数据信息读取分区数据，合理的分区能减少Presto数据读取量，提升查询性能。
+使用列式存储。Presto对ORC文件读取做了特定优化，因此在Hive中创建Presto使用的表时，建议采用ORC格式存储。相对于Parquet，Presto对ORC支持更好。
+2.使用压缩：数据压缩可以减少节点间数据传输对IO带宽压力，对于即席查询需要快速解压，建议采用Snappy压缩。
+
+**查询SQL**
+
+1.只选择使用的字段：由于采用列式存储，选择需要的字段可加快字段的读取、减少数据量。避免采用*读取所有字段。
+
+```sql
+[GOOD]: SELECT time, user, host FROM tbl
+[BAD]:  SELECT * FROM tbl
+```
+
+2.过滤条件必须加上分区字段：对于有分区的表，where语句中优先使用分区字段进行过滤。acct_day是分区字段，visit_time是具体访问时间。
+
+```sql
+[GOOD]: SELECT time, user, host FROM tbl where acct_day=20171101
+[BAD]:  SELECT * FROM tbl where visit_time=20171101
+```
+
+3.Group By语句优化：合理安排Group by语句中字段顺序对性能有一定提升。将Group By语句中字段按照每个字段distinct数据多少进行降序排列。
+
+```sql
+[GOOD]: SELECT GROUP BY uid, gender
+[BAD]:  SELECT GROUP BY gender, uid
+```
+
+4.Order by时使用Limit：Order by需要扫描数据到单个worker节点进行排序，导致单个worker需要大量内存。如果是查询Top N或者Bottom N，使用limit可减少排序计算和内存压力。
+
+```sql
+[GOOD]: SELECT * FROM tbl ORDER BY time LIMIT 100
+[BAD]:  SELECT * FROM tbl ORDER BY time
+```
+
+5.使用Join语句时将大表放在左边：Presto中join的默认算法是broadcast join，即将join左边的表分割到多个worker，然后将join右边的表数据整个复制一份发送到每个worker进行计算。如果右边的表数据量太大，则可能会报内存溢出错误。
+
+```sql
+[GOOD] SELECT ... FROM large_table l join small_table s on l.id = s.id
+[BAD] SELECT ... FROM small_table s join large_table l on l.id = s.id
+```
+
+**注意事项**
+
+1.字段名引用：避免和关键字冲突：MySQL对字段加反引号`、Presto对字段加双引号分割。当然，如果字段名称不是关键字，可以不加这个双引号。
+2.时间函数：对于Timestamp，需要进行比较的时候，需要添加Timestamp关键字，而MySQL中对Timestamp可以直接进行比较。
+
+```sql
+/*MySQL的写法*/
+SELECT t FROM a WHERE t > '2017-01-01 00:00:00'; 
+
+/*Presto中的写法*/
+SELECT t FROM a WHERE t > timestamp '2017-01-01 00:00:00';
+```
+
+3.不支持INSERT OVERWRITE语法：Presto中不支持insert overwrite语法，只能先delete，然后insert into。
+4.PARQUET格式：Presto目前支持Parquet格式，支持查询，但不支持insert。

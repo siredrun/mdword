@@ -397,3 +397,25 @@ NameNode有一个工作线程池，用来处理不同DataNode的并发心跳以�
 （1）如果MR造成系统宕机。此时要控制Yarn同时运行的任务数，和每个任务申请的最大内存。调整参数：yarn.scheduler.maximum-allocation-mb（单个任务可申请的最多物理内存量，默认是8192MB）
 （2）如果写入文件过量造成NameNode宕机。那么调高Kafka的存储大小，控制从Kafka到HDFS的写入速度。高峰期的时候用Kafka进行缓存，高峰期过去数据同步会自动跟上。
 
+## 配置历史服务器
+
+为了查看程序的历史运行情况，需要配置一下历史服务器。具体配置步骤如下：
+1）配置mapred-site.xml
+
+```
+vim $HD_HOME/etc/hadoop/mapred-site.xml
+<!-- 历史服务器端地址 -->
+<property>
+    <name>mapreduce.jobhistory.address</name>
+    <value>hadoop102:10020</value>
+</property>
+
+<!-- 历史服务器web端地址 -->
+<property>
+    <name>mapreduce.jobhistory.webapp.address</name>
+    <value>hadoop102:19888</value>
+</property>
+
+xsync $HD_HOME/etc/hadoop/mapred-site.xml
+mapred --daemon start historyserver # 访问http://hadoop102:19888/jobhistory jps有jobhistory
+```
