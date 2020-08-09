@@ -4,3 +4,4 @@ gmall-mock-db.jar业务数据生成包。
 azkaban-web-server-2.5.0.tar.gz
 azkaban-executor-server-2.5.0.tar.gz
 azkaban-sql-script-2.5.0.tar.gz
+yanagishima-18.0.zip
